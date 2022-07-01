@@ -41,11 +41,11 @@ public class RestDecorator {
      * @param params   请求参数
      * @return v
      */
-    public String generateRequestParameters(String protocol, String uri, Map<String, String> params) {
+    public String generateRequestParameters(String protocol, String uri, Map<String, Object> params) {
         StringBuilder sb = new StringBuilder(protocol).append("://").append(uri);
         if (!CollectionUtils.isEmpty(params)) {
             sb.append("?");
-            for (Map.Entry<String, String> map : params.entrySet()) {
+            for (Map.Entry<String, Object> map : params.entrySet()) {
                 sb.append(map.getKey())
                         .append("=")
                         .append(map.getValue())
@@ -66,8 +66,14 @@ public class RestDecorator {
      *
      * @return v
      */
-    public String doGet(String url, Map<String, String> dataMap) {
-        String requestWithParameters = generateRequestParameters("http", url, dataMap);
+    public String doGet(String uri, Map<String, Object> dataMap) {
+        String requestWithParameters = generateRequestParameters("http", uri, dataMap);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(requestWithParameters, String.class);
+        return (String) responseEntity.getBody();
+    }
+
+    public String doGet(String protocol, String uri, Map<String, Object> dataMap) {
+        String requestWithParameters = generateRequestParameters(protocol, uri, dataMap);
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(requestWithParameters, String.class);
         return (String) responseEntity.getBody();
     }
