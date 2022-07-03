@@ -18,7 +18,6 @@
     <description>petty-profits</description>
 
     <modules>
-        <module>profits-api</module>
         <module>profits-common</module>
         <module>profits-storage</module>
         <module>profits-server</module>
@@ -36,11 +35,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.github.tf2jaguar</groupId>
-                <artifactId>profits-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>io.github.tf2jaguar</groupId>
                 <artifactId>profits-common</artifactId>

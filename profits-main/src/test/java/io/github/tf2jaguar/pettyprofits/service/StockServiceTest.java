@@ -1,7 +1,7 @@
 package io.github.tf2jaguar.pettyprofits.service;
 
 import io.github.tf2jaguar.pettyprofits.BaseTest;
-import io.github.tf2jaguar.pettyprofits.StockService;
+import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,8 +15,8 @@ public class StockServiceTest extends BaseTest {
     private StockService stockService;
 
     @Test
-    public void history() {
-        String history = stockService.historyDayFq1("0.000603", "20220110", "20220701");
-        System.out.println(history);
+    public void refreshStockBase() {
+        stockService.refreshStockBase(MarketFsEnum.hu_shen_a);
     }
+
 }

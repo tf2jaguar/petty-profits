@@ -15,8 +15,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.tf2jaguar</groupId>
-            <artifactId>profits-api</artifactId>
+            <groupId>io.github.tf2jaguar.micro</groupId>
+            <artifactId>micro-core</artifactId>
         </dependency>
 
         <dependency>
