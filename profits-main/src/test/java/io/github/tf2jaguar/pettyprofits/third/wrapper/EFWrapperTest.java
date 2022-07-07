@@ -1,14 +1,14 @@
 package io.github.tf2jaguar.pettyprofits.third.wrapper;
 
 import io.github.tf2jaguar.pettyprofits.BaseTest;
-import io.github.tf2jaguar.pettyprofits.entity.StockBase;
+import io.github.tf2jaguar.pettyprofits.bo.KLine;
+import io.github.tf2jaguar.pettyprofits.bo.StockInfoDTO;
+import io.github.tf2jaguar.pettyprofits.entity.StockBaseEntity;
 import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * @author : zhangguodong
@@ -21,13 +21,14 @@ public class EFWrapperTest extends BaseTest {
 
     @Test
     public void listAllStockBase() {
-        List<StockBase> stockBases = efWrapper.listAllStockBase(MarketFsEnum.hu_a);
-        System.out.println(stockBases);
+        List<StockBaseEntity> stockBaseEntities = efWrapper.listAllStockBase(MarketFsEnum.hu_a);
+        System.out.println(stockBaseEntities);
     }
 
     @Test
     public void history() {
-        String history = efWrapper.historyDayFq1("0.000603", "20220110", "20220701");
-        System.out.println(history);
+        StockInfoDTO history = efWrapper.historyDayFq1("0.000603", "20220110", "20220701");
+        List<KLine> klines = history.getKlineList();
+        System.out.println(klines.get(klines.size() - 1).getClosePrice() - klines.get(klines.size() - 50).getClosePrice());
     }
 }

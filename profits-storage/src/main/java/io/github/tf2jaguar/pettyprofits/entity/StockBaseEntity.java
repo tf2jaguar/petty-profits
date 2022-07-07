@@ -17,8 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "t_stock_base")
-public class StockBase {
-    private Integer id;
+public class StockBaseEntity {
     // 市场类型
     private String marketType;
     // 股票代码

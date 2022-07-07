@@ -19,4 +19,13 @@ public class StockServiceTest extends BaseTest {
         stockService.refreshStockBase(MarketFsEnum.hu_shen_a);
     }
 
+    @Test
+    public void rps() {
+        stockService.refreshStockRps();
+    }
+
+    @Test
+    public void refreshStockRps() {
+        stockService.refreshStockRps();
+    }
 }

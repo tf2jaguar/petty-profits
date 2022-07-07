@@ -4,12 +4,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import io.github.tf2jaguar.pettyprofits.bo.CListResponse;
 import io.github.tf2jaguar.pettyprofits.bo.EfResult;
+import io.github.tf2jaguar.pettyprofits.bo.KLine;
+import io.github.tf2jaguar.pettyprofits.bo.StockInfoDTO;
 import io.github.tf2jaguar.pettyprofits.constant.ProfitsConstants;
 import io.github.tf2jaguar.pettyprofits.util.RestDecorator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -41,10 +46,24 @@ public class EfService {
      * @param fqt   复权 1: 前复权 2: 后复权 0: 不复权
      * @return code k line
      */
-    public String history(String secid, String beg, String end, int klt, int fqt) {
+    public EfResult<StockInfoDTO> history(String secid, String beg, String end, int klt, int fqt) {
         String params = String.format(ProfitsConstants.EF_HISTORY_K_LINES_PARAMS_PARTNER, secid, klt, fqt, beg, end);
         String url = String.join("?", ProfitsConstants.EF_HISTORY_K_LINES_URL, params);
-        return restDecorator.doGet(url);
+        String getJsonStr = restDecorator.doGet(url);
+        if (StringUtils.isEmpty(getJsonStr)) {
+            log.warn("获取市场行情异常: {}", url);
+            return null;
+        }
+
+        EfResult<StockInfoDTO> stockInfo = JSONObject.parseObject(getJsonStr, new TypeReference<EfResult<StockInfoDTO>>() {
+        });
+        List<KLine> kLineList = stockInfo.getData().getKlines().parallelStream().map(a -> {
+            String[] splits = a.split(",");
+            return KLine.buildByArr(splits);
+        }).collect(Collectors.toList());
+        stockInfo.getData().setKlineList(kLineList);
+        stockInfo.getData().setKlines(null);
+        return stockInfo;
     }
 
     /**
