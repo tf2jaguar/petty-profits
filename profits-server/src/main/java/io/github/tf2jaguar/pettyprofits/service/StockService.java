@@ -3,7 +3,9 @@ package io.github.tf2jaguar.pettyprofits.service;
 import com.alibaba.fastjson.JSONObject;
 import io.github.tf2jaguar.pettyprofits.bo.StockInfoDTO;
 import io.github.tf2jaguar.pettyprofits.dao.StockBaseDao;
+import io.github.tf2jaguar.pettyprofits.dao.StockKlineDao;
 import io.github.tf2jaguar.pettyprofits.entity.StockBaseEntity;
+import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
 import io.github.tf2jaguar.pettyprofits.service.bo.StockRpsBO;
 import io.github.tf2jaguar.pettyprofits.third.wrapper.EFWrapper;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,8 @@ public class StockService {
     private EFWrapper efWrapper;
     @Resource
     private StockBaseDao stockBaseDao;
+    @Resource
+    private StockKlineDao stockKlineDao;
 
     public void refreshStockBase(MarketFsEnum marketFsEnum) {
         List<StockBaseEntity> stockBaseEntities = efWrapper.listAllStockBase(marketFsEnum);
@@ -62,33 +67,56 @@ public class StockService {
         }
     }
 
-    public void refreshStockRps() {
-        // 计算周期
-        int[] periods = new int[]{50};
-        Map<Integer, List<StockRpsBO>> periodsMap = new HashMap<>();
+    public void writeStockKLines() {
+        String beg = "19000101";
+        String end = DateUtils.date2String(DateUtils.PATTERN_NO_HOUR_NO_MINUS, new Date());
+        writeStockKLines(beg, end);
+    }
 
-        String endDay = DateUtils.date2String(DateUtils.PATTERN_NO_HOUR_NO_MINUS, new Date());
-        String startDay = DateUtils.previousDayOf(new Date(), 80, DateUtils.PATTERN_NO_HOUR_NO_MINUS);
+    public void writeStockKLines(String beg, String end) {
+        List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
+        Set<Integer> resultSet = stockBaseEntities.parallelStream().map(s -> {
+            String codeWithMarket = s.getMarketType() + "." + s.getStockCode();
+            log.info("get {} {} klines", s.getStockCode(), s.getStockName());
+            List<StockKlineEntity> stockKlines = efWrapper.historyDayFq1(codeWithMarket, beg, end);
+            if (CollectionUtils.isEmpty(stockKlines)) {
+                return 1;
+            }
+            int batchInsert = stockKlineDao.batchInsert(stockKlines);
+            if (batchInsert < 0) {
+                log.error("批量插入数据异常: {} {}", s.getStockCode(), s.getStockName());
+            }
+            return 0;
+        }).collect(Collectors.toSet());
+        log.info("批量插入数据:{}", resultSet);
+    }
+
+    public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods) {
+        // 默认计算周期: 50
+        int maxPeriods = Arrays.stream(periods).max().orElse(50);
+        int previousDays = (int) Math.round(maxPeriods + maxPeriods * 0.667);
+        String endDay = DateUtils.date2String(DateUtils.PATTERN_NO_HOUR, new Date());
+        String startDay = DateUtils.previousDayOf(new Date(), previousDays, DateUtils.PATTERN_NO_HOUR);
+        Map<Integer, List<StockRpsBO>> periodsMap = new HashMap<>();
 
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
         List<StockInfoDTO> stockInfoKLines = stockBaseEntities.parallelStream()
-                .map(s -> {
-                    String code = s.getMarketType() + "." + s.getStockCode();
-                    log.info("get {} {} klines", s.getStockCode(), s.getStockName());
-                    return efWrapper.historyDayFq1(code, startDay, endDay);
+                .map(st -> {
+                    List<StockKlineEntity> klines = stockKlineDao.selectClosePriceByTimeRange(st.getStockCode(), startDay, endDay);
+                    return new StockInfoDTO(st.getStockCode(), st.getStockName(), st.getMarketType(), klines);
                 }).collect(Collectors.toList());
 
         for (int period : periods) {
             List<StockRpsBO> withScoreStocks = stockInfoKLines.parallelStream()
-                    .map(s -> {
-                        int size = s.getKlineList().size();
+                    .map(st -> {
+                        int size = st.getKlineList().size();
                         if (size < period) {
-                            return StockRpsBO.builder().code(s.getCode()).name(s.getName()).score(null).build();
+                            return StockRpsBO.builder().code(st.getCode()).name(st.getName()).score(null).build();
                         }
-                        double curClosePrice = s.getKlineList().get(size - 1).getClosePrice();
-                        double periodClosePrice = s.getKlineList().get(size - period).getClosePrice();
-                        double score = curClosePrice - periodClosePrice;
-                        return StockRpsBO.builder().code(s.getCode()).name(s.getName()).score(score).build();
+                        BigDecimal curClosePrice = st.getKlineList().get(size - 1).getClosePrice();
+                        BigDecimal periodClosePrice = st.getKlineList().get(size - period).getClosePrice();
+                        BigDecimal score = curClosePrice.subtract(periodClosePrice);
+                        return StockRpsBO.builder().code(st.getCode()).name(st.getName()).score(score.doubleValue()).build();
                     })
                     .filter(s -> Objects.nonNull(s.getScore()))
                     .sorted(Comparator.comparing(StockRpsBO::getScore).reversed())
@@ -124,8 +152,7 @@ public class StockService {
             withScoreStocks.stream()
                     .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(30)
                     .forEach(s -> System.out.println(JSONObject.toJSONString(s)));
-
-
         }
+        return periodsMap;
     }
 }

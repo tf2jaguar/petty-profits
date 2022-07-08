@@ -7,7 +7,8 @@ import io.github.tf2jaguar.pettyprofits.bo.EfResult;
 import io.github.tf2jaguar.pettyprofits.bo.KLine;
 import io.github.tf2jaguar.pettyprofits.bo.StockInfoDTO;
 import io.github.tf2jaguar.pettyprofits.constant.ProfitsConstants;
-import io.github.tf2jaguar.pettyprofits.util.RestDecorator;
+import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
+import io.github.tf2jaguar.pettyprofits.util.RestWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 public class EfService {
 
     @Autowired
-    private RestDecorator restDecorator;
+    private RestWrapper restWrapper;
 
     /**
      * 股票k线数据
@@ -49,21 +50,14 @@ public class EfService {
     public EfResult<StockInfoDTO> history(String secid, String beg, String end, int klt, int fqt) {
         String params = String.format(ProfitsConstants.EF_HISTORY_K_LINES_PARAMS_PARTNER, secid, klt, fqt, beg, end);
         String url = String.join("?", ProfitsConstants.EF_HISTORY_K_LINES_URL, params);
-        String getJsonStr = restDecorator.doGet(url);
+        String getJsonStr = restWrapper.doGet(url);
         if (StringUtils.isEmpty(getJsonStr)) {
             log.warn("获取市场行情异常: {}", url);
             return null;
         }
 
-        EfResult<StockInfoDTO> stockInfo = JSONObject.parseObject(getJsonStr, new TypeReference<EfResult<StockInfoDTO>>() {
+        return JSONObject.parseObject(getJsonStr, new TypeReference<EfResult<StockInfoDTO>>() {
         });
-        List<KLine> kLineList = stockInfo.getData().getKlines().parallelStream().map(a -> {
-            String[] splits = a.split(",");
-            return KLine.buildByArr(splits);
-        }).collect(Collectors.toList());
-        stockInfo.getData().setKlineList(kLineList);
-        stockInfo.getData().setKlines(null);
-        return stockInfo;
     }
 
     /**
@@ -80,7 +74,7 @@ public class EfService {
     public EfResult<CListResponse> market(String fs, String fields) {
         String params = String.format(ProfitsConstants.EF_MARKET_PARAMS_PARTNER, fs, fields);
         String url = String.join("?", ProfitsConstants.EF_MARKET_URL, params);
-        String getJsonStr = restDecorator.doGet(url);
+        String getJsonStr = restWrapper.doGet(url);
         if (StringUtils.isEmpty(getJsonStr)) {
             log.warn("获取市场行情异常: {}", url);
             return null;
@@ -88,6 +82,5 @@ public class EfService {
         return JSONObject.parseObject(getJsonStr, new TypeReference<EfResult<CListResponse>>() {
         });
     }
-
 
 }

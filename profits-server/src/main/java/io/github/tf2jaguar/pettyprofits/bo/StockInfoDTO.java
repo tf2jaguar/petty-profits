@@ -1,5 +1,6 @@
 package io.github.tf2jaguar.pettyprofits.bo;
 
+import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import lombok.Data;
 
 import java.util.List;
@@ -19,6 +20,15 @@ public class StockInfoDTO {
     // "2022-01-10,12.05,12.56,12.74,11.92,130992,163007539.00,6.81,4.32,0.52,2.22",
     // "2022-01-11,12.63,12.55,12.70,12.48,59685,75049244.00,1.75,-0.08,-0.01,1.01"
     private List<String> klines;
-    private List<KLine> klineList;
+    private List<StockKlineEntity> klineList;
 
+    public StockInfoDTO() {
+    }
+
+    public StockInfoDTO(String code, String name, Integer market, List<StockKlineEntity> klineList) {
+        this.code = code;
+        this.market = market;
+        this.name = name;
+        this.klineList = klineList;
+    }
 }

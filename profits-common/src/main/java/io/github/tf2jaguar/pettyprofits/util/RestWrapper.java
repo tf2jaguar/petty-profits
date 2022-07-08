@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 
 @Component
-public class RestDecorator {
+public class RestWrapper {
 
     @Autowired
     private RestTemplate restTemplate;

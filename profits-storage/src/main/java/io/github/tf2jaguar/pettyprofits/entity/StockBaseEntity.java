@@ -19,7 +19,7 @@ import java.util.Date;
 @Table(name = "t_stock_base")
 public class StockBaseEntity {
     // 市场类型
-    private String marketType;
+    private Integer marketType;
     // 股票代码
     private String stockCode;
     // 股票名称

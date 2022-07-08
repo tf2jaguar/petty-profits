@@ -20,12 +20,12 @@ public class StockServiceTest extends BaseTest {
     }
 
     @Test
-    public void rps() {
-        stockService.refreshStockRps();
+    public void writeStockKLines() {
+        stockService.writeStockKLines("20220707", "20220708");
     }
 
     @Test
     public void refreshStockRps() {
-        stockService.refreshStockRps();
+        stockService.refreshStockRps(new int[]{50});
     }
 }

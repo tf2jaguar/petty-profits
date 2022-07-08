@@ -11,13 +11,13 @@ import java.util.Map;
  * @author : zhangguodong
  * @since : 2022/7/1 16:39
  */
-public class RestDecoratorTest extends BaseTest {
+public class RestWrapperTest extends BaseTest {
     @Autowired
-    private RestDecorator restDecorator;
+    private RestWrapper restWrapper;
 
     @Test
     public void doGet() {
-        String s = restDecorator.doGet("www.baidu.com");
+        String s = restWrapper.doGet("www.baidu.com");
         System.out.println(s);
     }
 
@@ -27,7 +27,7 @@ public class RestDecoratorTest extends BaseTest {
         param.put("user_id", 37784357);
         Map<String, Object> request = new HashMap<>();
         request.put("params", param);
-        String s = restDecorator.doPost("http://xx:8080/xx", request);
+        String s = restWrapper.doPost("http://xx:8080/xx", request);
         System.out.println(s);
     }
 
