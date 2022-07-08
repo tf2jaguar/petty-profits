@@ -18,7 +18,7 @@ public class StockRpsBO {
     private String name;
     private Integer rank;
     private Double score;
-    private Integer rps;
+    private Double rps;
 
     public StockRpsBO(String code, String name) {
         this.code = code;

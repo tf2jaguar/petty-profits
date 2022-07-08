@@ -111,9 +111,10 @@ public class StockService {
             }
 
             // normalization
+            //rps = (1-涨幅排名/总数量)*100=90。
             // s_rps = ( 100*(s_rank - s_rank.min()) )/(s_rank.max()-s_rank.min())
             for (StockRpsBO st : withScoreStocks) {
-                int rps = (int) (100 * (st.getScore() - minScore) / (maxScore - minScore));
+                double rps = (1000 * (st.getScore() - minScore) / (maxScore - minScore));
                 st.setRps(rps);
             }
 
