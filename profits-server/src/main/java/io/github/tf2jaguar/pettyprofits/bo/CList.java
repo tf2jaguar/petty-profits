@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CList {
     // 市场类型
-    private String f13;
+    private Integer f13;
     // 股票代码
     private String f12;
     // 股票名称

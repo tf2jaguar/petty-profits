@@ -75,20 +75,28 @@ public class StockService {
 
     public void writeStockKLines(String beg, String end) {
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
-        Set<Integer> resultSet = stockBaseEntities.parallelStream().map(s -> {
-            String codeWithMarket = s.getMarketType() + "." + s.getStockCode();
-            log.info("get {} {} klines", s.getStockCode(), s.getStockName());
-            List<StockKlineEntity> stockKlines = efWrapper.historyDayFq1(codeWithMarket, beg, end);
-            if (CollectionUtils.isEmpty(stockKlines)) {
-                return 1;
-            }
+        Set<Integer> resultSet = stockBaseEntities.parallelStream()
+                .map(s -> writeStockKLines(s, beg, end))
+                .collect(Collectors.toSet());
+        log.info("批量插入数据:{}", resultSet);
+    }
+
+    public int writeStockKLines(StockBaseEntity s, String beg, String end) {
+        String codeWithMarket = s.getMarketType() + "." + s.getStockCode();
+        log.info("get {} {} {} klines", s.getMarketType(), s.getStockCode(), s.getStockName());
+        List<StockKlineEntity> stockKlines = efWrapper.historyDayFq1(codeWithMarket, beg, end);
+        if (CollectionUtils.isEmpty(stockKlines)) {
+            return 1;
+        }
+        try {
             int batchInsert = stockKlineDao.batchInsert(stockKlines);
             if (batchInsert < 0) {
-                log.error("批量插入数据异常: {} {}", s.getStockCode(), s.getStockName());
+                log.error("批量插入数据异常: {}  {} {}",  s.getMarketType(), s.getStockCode(), s.getStockName());
             }
-            return 0;
-        }).collect(Collectors.toSet());
-        log.info("批量插入数据:{}", resultSet);
+        } catch (Exception e) {
+            log.error("出现异常:{} {} {}", s.getMarketType(), s.getStockCode(), s.getStockName());
+        }
+        return 0;
     }
 
     public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods) {

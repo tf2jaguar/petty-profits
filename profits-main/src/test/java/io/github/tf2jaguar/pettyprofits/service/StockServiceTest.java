@@ -1,6 +1,8 @@
 package io.github.tf2jaguar.pettyprofits.service;
 
 import io.github.tf2jaguar.pettyprofits.BaseTest;
+import io.github.tf2jaguar.pettyprofits.entity.StockBaseEntity;
+import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,9 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void writeStockKLines() {
-        stockService.writeStockKLines("20220707", "20220708");
+//        stockService.writeStockKLines();
+        StockBaseEntity stockBase = StockBaseEntity.builder().stockCode("002223").stockName("鱼跃医疗").marketType(0).build();
+        stockService.writeStockKLines(stockBase,"19000101","20220708");
     }
 
     @Test
