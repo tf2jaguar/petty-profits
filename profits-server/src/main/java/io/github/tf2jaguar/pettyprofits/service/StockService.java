@@ -68,17 +68,15 @@ public class StockService {
     }
 
     public void writeStockKLines() {
-        String beg = "19000101";
+        String beg = "19900101";
         String end = DateUtils.date2String(DateUtils.PATTERN_NO_HOUR_NO_MINUS, new Date());
         writeStockKLines(beg, end);
     }
 
     public void writeStockKLines(String beg, String end) {
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
-        Set<Integer> resultSet = stockBaseEntities.parallelStream()
-                .map(s -> writeStockKLines(s, beg, end))
-                .collect(Collectors.toSet());
-        log.info("批量插入数据:{}", resultSet);
+        Set<Integer> resultSet = stockBaseEntities.parallelStream().map(s -> writeStockKLines(s, beg, end)).collect(Collectors.toSet());
+        log.info("result: {}", resultSet);
     }
 
     public int writeStockKLines(StockBaseEntity s, String beg, String end) {
@@ -88,15 +86,38 @@ public class StockService {
         if (CollectionUtils.isEmpty(stockKlines)) {
             return 1;
         }
-        try {
-            int batchInsert = stockKlineDao.batchInsert(stockKlines);
-            if (batchInsert < 0) {
-                log.error("批量插入数据异常: {}  {} {}",  s.getMarketType(), s.getStockCode(), s.getStockName());
+        // 按年批处理
+        String preYear = null;
+        List<StockKlineEntity> preSave = new LinkedList<>();
+        for (StockKlineEntity kline : stockKlines) {
+            String dealTimeStr = DateUtils.date2String(DateUtils.PATTERN_NO_MONTH, kline.getDealTime());
+            if (preYear == null) {
+                preYear = dealTimeStr;
             }
-        } catch (Exception e) {
-            log.error("出现异常:{} {} {}", s.getMarketType(), s.getStockCode(), s.getStockName());
+            if (dealTimeStr.equals(preYear)) {
+                preSave.add(kline);
+            } else if (!CollectionUtils.isEmpty(preSave)) {
+                trySave(preSave);
+                preYear = null;
+                preSave = new LinkedList<>();
+            }
+        }
+        if (!CollectionUtils.isEmpty(preSave)) {
+            trySave(preSave);
         }
         return 0;
+    }
+
+    private void trySave(List<StockKlineEntity> preSave) {
+        try {
+            int batchInsert = stockKlineDao.batchInsert(preSave);
+            if (batchInsert < 0) {
+                log.error("批量插入数据异常: {}", JSONObject.toJSONString(preSave));
+            }
+        } catch (
+                Exception e) {
+            log.error("出现异常:{}", JSONObject.toJSONString(preSave), e);
+        }
     }
 
     public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods) {

@@ -47,9 +47,9 @@ public class StockKlineEntity {
     // 6 成交额
     private BigDecimal tradingAmount;
     // 7 振幅%
-    private BigDecimal amplitude;
+    private String amplitude;
     // 8 涨跌幅%
-    private BigDecimal udVolume;
+    private String udVolume;
     // 9 涨跌额
     private BigDecimal udAmount;
     // 10 换手率%

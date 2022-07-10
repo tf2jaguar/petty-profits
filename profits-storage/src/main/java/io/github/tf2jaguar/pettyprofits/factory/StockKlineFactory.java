@@ -23,8 +23,8 @@ public class StockKlineFactory {
         stockKline.setLowestPrice(new BigDecimal(splits[4]));
         stockKline.setTradingVolume(new BigDecimal(splits[5]));
         stockKline.setTradingAmount(new BigDecimal(splits[6]));
-        stockKline.setAmplitude(new BigDecimal(splits[7]));
-        stockKline.setUdVolume(new BigDecimal(splits[8]));
+        stockKline.setAmplitude(splits[7]);
+        stockKline.setUdVolume(splits[8]);
         stockKline.setUdAmount(new BigDecimal(splits[9]));
         stockKline.setTurnoverRate(new BigDecimal(splits[10]));
         return stockKline;

@@ -5,11 +5,6 @@ server:
 spring:
   application:
     name: petty-profits
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/profits_db?characterEncoding=utf-8&connectTimeout=2000&socketTimeout=2000&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true
-    username: root
-    password: 123456
   redis:
     host: localhost
     port: 6379
@@ -20,6 +15,28 @@ spring:
         max-active: 8
         min-idle: 3
         max-wait: 1s
+  shardingsphere:
+    datasource:
+      names: db
+      db:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/profits_db?characterEncoding=utf-8&connectTimeout=2000&socketTimeout=2000&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true
+        username: root
+        password: 123456
+    props:
+      sql:
+        show: false
+    sharding:
+      tables:
+        t_stock_kline:
+          actual-data-nodes: db.t_stock_kline_$->{1990..2022}
+          table-strategy:
+            standard:
+              sharding-column: deal_time
+              precise-algorithm-class-name: io.github.tf2jaguar.pettyprofits.sharding.KlineShardingAlgorithm
+
+
 management:
   endpoint:
     health:

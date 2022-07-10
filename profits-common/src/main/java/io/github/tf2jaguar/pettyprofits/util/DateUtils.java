@@ -18,6 +18,7 @@ public class DateUtils {
     public static final String PATTERN_NO_MINUTE = "yyyy-MM-dd HH";
     public static final String PATTERN_NO_HOUR = "yyyy-MM-dd";
     public static final String PATTERN_NO_DAY = "yyyy-MM";
+    public static final String PATTERN_NO_MONTH = "yyyy";
     public static final String PATTERN_HOUR_MINUTE = "HH:mm";
     public static final String PATTERN_HOUR = "HH";
     public static final String PATTERN_HOUR_MINUTE_SECOND = "HH:mm:ss";

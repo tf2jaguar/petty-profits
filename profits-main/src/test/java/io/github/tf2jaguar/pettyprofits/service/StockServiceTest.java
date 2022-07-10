@@ -7,6 +7,9 @@ import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * @author : zhangguodong
  * @since : 2022/7/1 21:19
@@ -23,9 +26,9 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void writeStockKLines() {
-//        stockService.writeStockKLines();
-        StockBaseEntity stockBase = StockBaseEntity.builder().stockCode("002223").stockName("鱼跃医疗").marketType(0).build();
-        stockService.writeStockKLines(stockBase,"19000101","20220708");
+        stockService.writeStockKLines();
+//        StockBaseEntity stockBase = StockBaseEntity.builder().stockCode("000001").stockName("平安银行").marketType(0).build();
+//        stockService.writeStockKLines(stockBase,"20000101","20220708");
     }
 
     @Test
