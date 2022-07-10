@@ -124,14 +124,14 @@ public class StockService {
         // 默认计算周期: 50
         int maxPeriods = Arrays.stream(periods).max().orElse(50);
         int previousDays = (int) Math.round(maxPeriods + maxPeriods * 0.667);
-        String endDay = DateUtils.date2String(DateUtils.PATTERN_NO_HOUR, new Date());
-        String startDay = DateUtils.previousDayOf(new Date(), previousDays, DateUtils.PATTERN_NO_HOUR);
+        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-04");
+        Date startDate = DateUtils.previousDayOf(endDate, previousDays);
         Map<Integer, List<StockRpsBO>> periodsMap = new HashMap<>();
 
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
         List<StockInfoDTO> stockInfoKLines = stockBaseEntities.parallelStream()
                 .map(st -> {
-                    List<StockKlineEntity> klines = stockKlineDao.selectClosePriceByTimeRange(st.getStockCode(), startDay, endDay);
+                    List<StockKlineEntity> klines = stockKlineDao.selectClosePriceByTimeRange(st.getStockCode(), startDate, endDate);
                     return new StockInfoDTO(st.getStockCode(), st.getStockName(), st.getMarketType(), klines);
                 }).collect(Collectors.toList());
 
@@ -171,7 +171,7 @@ public class StockService {
             //rps = (1-涨幅排名/总数量)*100=90。
             // s_rps = ( 100*(s_rank - s_rank.min()) )/(s_rank.max()-s_rank.min())
             for (StockRpsBO st : withScoreStocks) {
-                double rps = (1000 * (st.getScore() - minScore) / (maxScore - minScore));
+                double rps = (100 * (st.getScore() - minScore) / (maxScore - minScore));
                 st.setRps(rps);
             }
 

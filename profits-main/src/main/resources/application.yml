@@ -35,6 +35,8 @@ spring:
             standard:
               sharding-column: deal_time
               precise-algorithm-class-name: io.github.tf2jaguar.pettyprofits.sharding.KlineShardingAlgorithm
+              range-algorithm-class-name: io.github.tf2jaguar.pettyprofits.sharding.KlineShardingAlgorithm
+
 
 
 management:

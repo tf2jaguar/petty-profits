@@ -1,12 +1,12 @@
 package io.github.tf2jaguar.pettyprofits.dao;
 
-import io.github.tf2jaguar.pettyprofits.entity.StockBaseEntity;
 import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import tk.mybatis.mapper.common.BaseMapper;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,6 +22,6 @@ public interface StockKlineDao extends BaseMapper<StockKlineEntity> {
             "</script>"})
     int batchInsert(@Param("stocks") List<StockKlineEntity> preInsert);
 
-    @Select("select stock_code,close_price from t_stock_kline where stock_code=#{stockCode} and dela_time between #{startDay} and #{endDay}")
-    List<StockKlineEntity> selectClosePriceByTimeRange(@Param("stockCode") String stockCode, @Param("startDay") String startDay, @Param("endDay") String endDay);
+    @Select("select stock_code,close_price from t_stock_kline where stock_code=#{stockCode} and deal_time between #{startDay} and #{endDay}")
+    List<StockKlineEntity> selectClosePriceByTimeRange(@Param("stockCode") String stockCode, @Param("startDay") Date startDay, @Param("endDay") Date endDay);
 }
