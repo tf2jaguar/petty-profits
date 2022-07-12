@@ -1,14 +1,12 @@
 package io.github.tf2jaguar.pettyprofits.service;
 
 import io.github.tf2jaguar.pettyprofits.BaseTest;
-import io.github.tf2jaguar.pettyprofits.entity.StockBaseEntity;
-import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
+import io.github.tf2jaguar.pettyprofits.util.DateUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Date;
 
 /**
  * @author : zhangguodong
@@ -33,6 +31,7 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void refreshStockRps() {
-        stockService.refreshStockRps(new int[]{50});
+        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-04");
+        stockService.refreshStockRps(new int[]{50}, endDate);
     }
 }

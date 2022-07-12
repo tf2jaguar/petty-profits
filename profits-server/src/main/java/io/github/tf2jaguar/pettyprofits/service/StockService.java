@@ -17,6 +17,8 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -120,11 +122,10 @@ public class StockService {
         }
     }
 
-    public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods) {
+    public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods, Date endDate) {
         // 默认计算周期: 50
         int maxPeriods = Arrays.stream(periods).max().orElse(50);
         int previousDays = (int) Math.round(maxPeriods + maxPeriods * 0.667);
-        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-04");
         Date startDate = DateUtils.previousDayOf(endDate, previousDays);
         Map<Integer, List<StockRpsBO>> periodsMap = new HashMap<>();
 
@@ -138,40 +139,46 @@ public class StockService {
         for (int period : periods) {
             List<StockRpsBO> withScoreStocks = stockInfoKLines.parallelStream()
                     .map(st -> {
+                        StockRpsBO val = StockRpsBO.builder().code(st.getCode()).name(st.getName()).build();
                         int size = st.getKlineList().size();
                         if (size < period) {
-                            return StockRpsBO.builder().code(st.getCode()).name(st.getName()).score(null).build();
+                            return val;
                         }
                         BigDecimal curClosePrice = st.getKlineList().get(size - 1).getClosePrice();
                         BigDecimal periodClosePrice = st.getKlineList().get(size - period).getClosePrice();
-                        BigDecimal score = curClosePrice.subtract(periodClosePrice);
-                        return StockRpsBO.builder().code(st.getCode()).name(st.getName()).score(score.doubleValue()).build();
+                        if (Objects.isNull(periodClosePrice) || periodClosePrice.compareTo(new BigDecimal("0.0")) == 0) {
+                            return val;
+                        }
+                        // 涨幅: 某支股票昨日收盘价为 100，今日收盘价为 110，计算公式为 (110-100)/100=10%。
+                        BigDecimal divide = curClosePrice.subtract(periodClosePrice)
+                                .divide(periodClosePrice, 5, RoundingMode.HALF_UP);
+                        val.setIncPercent(divide.doubleValue());
+                        return val;
                     })
-                    .filter(s -> Objects.nonNull(s.getScore()))
-                    .sorted(Comparator.comparing(StockRpsBO::getScore).reversed())
+                    .filter(s -> Objects.nonNull(s.getIncPercent()))
+                    .sorted(Comparator.comparing(StockRpsBO::getIncPercent).reversed())
                     .collect(Collectors.toList());
 
             // rank by dense
-            // s_rank = (h.iloc[-1]/h.iloc[-n]).sort_values(ascending=False).rank(method='dense')
             int idx = 0;
-            double lastScore = -1;
-            double minScore = 0, maxScore = 0;
+            double last = -1;
+            double minIncPercent = 0, maxIncPercent = 0;
             for (StockRpsBO st : withScoreStocks) {
-                if (Double.compare(lastScore, st.getScore()) != 0) {
-                    lastScore = st.getScore();
+                if (Double.compare(last, st.getIncPercent()) != 0) {
+                    last = st.getIncPercent();
                     idx++;
                 }
                 st.setRank(idx);
 
-                minScore = Math.min(minScore, st.getScore());
-                maxScore = Math.max(maxScore, st.getScore());
+                minIncPercent = Math.min(minIncPercent, st.getIncPercent());
+                maxIncPercent = Math.max(maxIncPercent, st.getIncPercent());
             }
 
             // normalization
             //rps = (1-涨幅排名/总数量)*100=90。
-            // s_rps = ( 100*(s_rank - s_rank.min()) )/(s_rank.max()-s_rank.min())
+            DecimalFormat df = new DecimalFormat("0.00000");
             for (StockRpsBO st : withScoreStocks) {
-                double rps = (100 * (st.getScore() - minScore) / (maxScore - minScore));
+                double rps = 100 * (1 - Double.parseDouble(df.format((float) st.getRank() / withScoreStocks.size())));
                 st.setRps(rps);
             }
 

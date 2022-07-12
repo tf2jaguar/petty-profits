@@ -16,8 +16,10 @@ import lombok.NoArgsConstructor;
 public class StockRpsBO {
     private String code;
     private String name;
+    // 排名
     private Integer rank;
-    private Double score;
+    //涨幅
+    private Double incPercent;
     private Double rps;
 
     public StockRpsBO(String code, String name) {
