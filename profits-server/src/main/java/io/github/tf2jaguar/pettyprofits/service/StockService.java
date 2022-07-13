@@ -77,7 +77,9 @@ public class StockService {
 
     public void writeStockKLines(String beg, String end) {
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
-        Set<Integer> resultSet = stockBaseEntities.parallelStream().map(s -> writeStockKLines(s, beg, end)).collect(Collectors.toSet());
+        Set<Integer> resultSet = stockBaseEntities.parallelStream()
+                .map(s -> writeStockKLines(s, beg, end))
+                .collect(Collectors.toSet());
         log.info("result: {}", resultSet);
     }
 
@@ -184,9 +186,9 @@ public class StockService {
 
             periodsMap.put(period, withScoreStocks);
 
-            // print 30 limit
+            // print 60 limit
             withScoreStocks.stream()
-                    .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(30)
+                    .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(60)
                     .forEach(s -> System.out.println(JSONObject.toJSONString(s)));
         }
         return periodsMap;

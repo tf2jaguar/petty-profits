@@ -24,4 +24,7 @@ public interface StockKlineDao extends BaseMapper<StockKlineEntity> {
 
     @Select("select stock_code,close_price from t_stock_kline where stock_code=#{stockCode} and deal_time between #{startDay} and #{endDay}")
     List<StockKlineEntity> selectClosePriceByTimeRange(@Param("stockCode") String stockCode, @Param("startDay") Date startDay, @Param("endDay") Date endDay);
+
+    @Select("select * FROM t_stock_kline_2022 order by deal_time desc limit 1")
+    StockKlineEntity selectLastDayKline();
 }
