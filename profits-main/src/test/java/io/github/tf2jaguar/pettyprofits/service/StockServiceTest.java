@@ -80,7 +80,7 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void refreshStockRps() {
-        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-14");
+        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-15");
         stockService.refreshStockRps(new int[]{50}, endDate);
     }
 }
