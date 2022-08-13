@@ -1,16 +1,20 @@
 package io.github.tf2jaguar.pettyprofits.service;
 
+import com.alibaba.fastjson.JSONObject;
 import io.github.tf2jaguar.pettyprofits.BaseTest;
+import io.github.tf2jaguar.pettyprofits.bo.StockInfoDTO;
 import io.github.tf2jaguar.pettyprofits.dao.StockKlineDao;
 import io.github.tf2jaguar.pettyprofits.entity.StockKlineEntity;
 import io.github.tf2jaguar.pettyprofits.enums.MarketFsEnum;
+import io.github.tf2jaguar.pettyprofits.service.bo.StockRpsBO;
+import io.github.tf2jaguar.pettyprofits.strategy.RpsStrategy;
 import io.github.tf2jaguar.pettyprofits.util.DateUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
-import java.util.Date;
+import java.util.*;
 
 /**
  * @author : zhangguodong
@@ -80,7 +84,13 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void refreshStockRps() {
-        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-07-15");
-        stockService.refreshStockRps(new int[]{50}, endDate);
+        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-08-13");
+        List<StockInfoDTO> stockKline = stockService.listStockKline(50, endDate);
+        List<StockRpsBO> withScoreStocks = RpsStrategy.refreshStockRps(50, stockKline);
+        // print 60 limit
+        withScoreStocks.stream()
+                .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(60)
+                .forEach(s -> System.out.println(JSONObject.toJSONString(s)));
+        System.out.println(withScoreStocks.size());
     }
 }

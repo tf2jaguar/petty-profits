@@ -124,73 +124,16 @@ public class StockService {
         }
     }
 
-    public Map<Integer, List<StockRpsBO>> refreshStockRps(int[] periods, Date endDate) {
-        // 默认计算周期: 50
-        int maxPeriods = Arrays.stream(periods).max().orElse(50);
-        int previousDays = (int) Math.round(maxPeriods + maxPeriods * 0.667);
+    public List<StockInfoDTO> listStockKline(Integer period, Date endDate) {
+        int previousDays = (int) Math.round(period + period * 0.667);
         Date startDate = DateUtils.previousDayOf(endDate, previousDays);
-        Map<Integer, List<StockRpsBO>> periodsMap = new HashMap<>();
 
         List<StockBaseEntity> stockBaseEntities = stockBaseDao.selectAll();
-        List<StockInfoDTO> stockInfoKLines = stockBaseEntities.parallelStream()
+        return stockBaseEntities.parallelStream()
                 .map(st -> {
                     List<StockKlineEntity> klines = stockKlineDao.selectClosePriceByTimeRange(st.getStockCode(), startDate, endDate);
                     return new StockInfoDTO(st.getStockCode(), st.getStockName(), st.getMarketType(), klines);
                 }).collect(Collectors.toList());
-
-        for (int period : periods) {
-            List<StockRpsBO> withScoreStocks = stockInfoKLines.parallelStream()
-                    .map(st -> {
-                        StockRpsBO val = StockRpsBO.builder().code(st.getCode()).name(st.getName()).build();
-                        int size = st.getKlineList().size();
-                        if (size < period) {
-                            return val;
-                        }
-                        BigDecimal curClosePrice = st.getKlineList().get(size - 1).getClosePrice();
-                        BigDecimal periodClosePrice = st.getKlineList().get(size - period).getClosePrice();
-                        if (Objects.isNull(periodClosePrice) || periodClosePrice.compareTo(new BigDecimal("0.0")) == 0) {
-                            return val;
-                        }
-                        // 涨幅: 某支股票昨日收盘价为 100，今日收盘价为 110，计算公式为 (110-100)/100=10%。
-                        BigDecimal divide = curClosePrice.subtract(periodClosePrice)
-                                .divide(periodClosePrice, 5, RoundingMode.HALF_UP);
-                        val.setIncPercent(divide.doubleValue());
-                        return val;
-                    })
-                    .filter(s -> Objects.nonNull(s.getIncPercent()))
-                    .sorted(Comparator.comparing(StockRpsBO::getIncPercent).reversed())
-                    .collect(Collectors.toList());
-
-            // rank by dense
-            int idx = 0;
-            double last = -1;
-            double minIncPercent = 0, maxIncPercent = 0;
-            for (StockRpsBO st : withScoreStocks) {
-                if (Double.compare(last, st.getIncPercent()) != 0) {
-                    last = st.getIncPercent();
-                    idx++;
-                }
-                st.setRank(idx);
-
-                minIncPercent = Math.min(minIncPercent, st.getIncPercent());
-                maxIncPercent = Math.max(maxIncPercent, st.getIncPercent());
-            }
-
-            // normalization
-            //rps = (1-涨幅排名/总数量)*100=90。
-            DecimalFormat df = new DecimalFormat("0.00000");
-            for (StockRpsBO st : withScoreStocks) {
-                double rps = 100 * (1 - Double.parseDouble(df.format((float) st.getRank() / withScoreStocks.size())));
-                st.setRps(rps);
-            }
-
-            periodsMap.put(period, withScoreStocks);
-
-            // print 60 limit
-            withScoreStocks.stream()
-                    .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(60)
-                    .forEach(s -> System.out.println(JSONObject.toJSONString(s)));
-        }
-        return periodsMap;
     }
+
 }
