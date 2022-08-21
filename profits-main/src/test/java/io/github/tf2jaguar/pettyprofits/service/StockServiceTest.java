@@ -84,11 +84,12 @@ public class StockServiceTest extends BaseTest {
 
     @Test
     public void refreshStockRps() {
-        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-08-13");
+        Date endDate = DateUtils.string2date(DateUtils.PATTERN_NO_HOUR, "2022-08-21");
         List<StockInfoDTO> stockKline = stockService.listStockKline(50, endDate);
         List<StockRpsBO> withScoreStocks = RpsStrategy.refreshStockRps(50, stockKline);
         // print 60 limit
         withScoreStocks.stream()
+                .peek(k->k.setKlineList(new ArrayList<>()))
                 .sorted(Comparator.comparing(StockRpsBO::getRps).reversed()).limit(60)
                 .forEach(s -> System.out.println(JSONObject.toJSONString(s)));
         System.out.println(withScoreStocks.size());
